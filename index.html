@@ -1195,12 +1195,52 @@
       .glass b{font-size:1.4rem}
       .glass span{font-size:.75rem}
     }
+    /* ===== v7: lightbox, меню, ползунки, фото, прелоадер ===== */
+    .lb button{z-index:5}
+    .lb figure{background:#141B2D}
+    @media(max-width:860px){
+      nav ul{gap:4px}
+      nav a{border-radius:999px;padding:14px 20px}
+    }
+    .num input[type=range]{padding:0;height:44px;min-height:44px;border:0;border-radius:0;background:transparent;width:auto}
+    .tile.ok{background:var(--bg2)!important}
+    .tile.ok svg,.tile.ok .ph,.card .v.ok svg,.card .v.ok .ph,.arch.ok svg{display:none}
+    .card .v.ok,.arch.ok{background:var(--bg2)}
+    .pre{display:none}
+    .js .pre{position:fixed;inset:0;z-index:300;background:var(--bg);display:flex;align-items:center;justify-content:center;transition:opacity .6s,visibility .6s}
+    .pre.hide{opacity:0;visibility:hidden;pointer-events:none}
+    .pre-in{display:grid;justify-items:center;gap:18px}
+    .pre-in img{width:88px;height:88px;border-radius:50%;object-fit:cover;animation:pls 1.4s ease-in-out infinite alternate}
+    .pre-bar{width:min(220px,60vw);height:4px;border-radius:99px;background:var(--bg2);overflow:hidden}
+    .pre-bar i{display:block;height:100%;background:var(--blue);transform:scaleX(0);transform-origin:0 0;transition:transform .3s}
+    #prep{font-weight:700;color:var(--blue);font-variant-numeric:tabular-nums}
+    @keyframes pls{to{transform:scale(1.08)}}
+    html.loading{overflow:hidden}
+    .loading .in-load,.loading .split .w i{animation-play-state:paused}
   </style>
 </head>
 
 <body>
   <script>
-    document.documentElement.classList.add('js')
+    document.documentElement.classList.add('js', 'loading')
+  </script>
+  <div class="pre" id="pre" role="status" aria-live="polite" aria-label="Загрузка сайта">
+    <div class="pre-in"><img src="images/logo.png" alt="" width="88" height="88">
+      <div class="pre-bar"><i id="prei"></i></div><span id="prep">0%</span></div>
+  </div>
+  <script>
+    (function() {
+      var done = false;
+      window.__preDone = function() {
+        if (done) return;
+        done = true;
+        document.documentElement.classList.remove('loading');
+        var p = document.getElementById('pre');
+        p.classList.add('hide');
+        setTimeout(function() { p.remove() }, 900)
+      };
+      setTimeout(window.__preDone, 15000)
+    })()
   </script>
   <header>
     <a class="logo" href="#hero" aria-label="mpl — на главную"><img src="images/logo.png" alt="mpl" width="44" height="44"></a>
@@ -1256,7 +1296,7 @@
           <rect x="130" y="250" width="140" height="270" fill="#14213f" opacity=".55" />
         </svg>
         <!-- ФОТО HERO: положите файл images/hero.jpg (если файла нет, остаётся SVG-иллюстрация) -->
-        <img src="images/hero.jpg" alt="Натяжной потолок в интерьере" onerror="this.remove()">
+        <img src="images/hero.jpg" alt="Натяжной потолок в интерьере" onload="this.parentNode.classList.add('ok')" onerror="this.remove()">
       </div>
         <div class="glass g1" aria-hidden="true"><b>3000+</b><span>реализованных объектов</span></div>
         <div class="glass g2" aria-hidden="true"><b>с 2020</b><span>делаем потолки</span></div>
@@ -1473,7 +1513,7 @@
       reviews: [
         {
           name: 'Владимир',
-          text: 'Сюда вставьте настоящий текст отзыва клиента.',
+          text: 'Команда сделала потрясающий потолок, огромное спасибо.',
           date: 'Октябрь 2026'
         },
         {
@@ -1634,7 +1674,7 @@
         n: 'Люстры',
         d: 'Акцентный светильник в центре комнаты. Закладную под люстру ставим при монтаже.'
       });
-      $('#cfg').innerHTML = items.map(i => `<button class="card" data-t="${i.t}" data-v="${i.id}" aria-pressed="false"><div class="v">${(tab==='profile'?sec(i.id):art(i.id))+(CFG.cfgPhotos[i.t+'-'+i.id]?`<img src="${CFG.cfgPhotos[i.t+'-'+i.id]}" alt="${i.n}" loading="lazy" onerror="this.remove()">`:`<span class="ph">${tab==='profile'?'Схема-пример':'Заглушка'}</span>`)}</div><h3>${i.n}</h3><p>${i.d}</p><span class="sel">Выбрано в расчёте</span></button>`).join('');
+      $('#cfg').innerHTML = items.map(i => `<button class="card" data-t="${i.t}" data-v="${i.id}" aria-pressed="false"><div class="v">${(tab==='profile'?sec(i.id):art(i.id))+(CFG.cfgPhotos[i.t+'-'+i.id]?`<img src="${CFG.cfgPhotos[i.t+'-'+i.id]}" alt="${i.n}" onload="this.parentNode.classList.add('ok')" onerror="this.remove()">`:`<span class="ph">${tab==='profile'?'Схема-пример':'Заглушка'}</span>`)}</div><h3>${i.n}</h3><p>${i.d}</p><span class="sel">Выбрано в расчёте</span></button>`).join('');
       $$('#cfg .sel').forEach(s => s.style.visibility = 'hidden');
       render()
     }
@@ -1676,7 +1716,7 @@
         g,
         i
       })).filter(o => cur === 'all' || o.g[0] === cur);
-      $('#gal').innerHTML = vis.length ? vis.map((o, j) => `<button class="tile" data-j="${j}" aria-label="Открыть: ${o.g[1]}" style="background:${o.g[2]}">${art(o.g[0])}${CFG.photos[o.i]?`<img src="${CFG.photos[o.i]}" alt="${o.g[1]}" loading="lazy" onerror="this.remove()">`:'<span class="ph">Заглушка фото</span>'}</button>`).join('') : '<p>В этой категории пока нет фото.</p>'
+      $('#gal').innerHTML = vis.length ? vis.map((o, j) => `<button class="tile" data-j="${j}" aria-label="Открыть: ${o.g[1]}" style="background:${o.g[2]}">${art(o.g[0])}${CFG.photos[o.i]?`<img src="${CFG.photos[o.i]}" alt="${o.g[1]}" onload="this.parentNode.classList.add('ok')" onerror="this.remove()">`:'<span class="ph">Заглушка фото</span>'}</button>`).join('') : '<p>В этой категории пока нет фото.</p>'
     }
     $('#chips').addEventListener('click', e => {
       const b = e.target.closest('.chip');
@@ -1691,7 +1731,7 @@
       $('#lbi').innerHTML = CFG.photos[o.i] ? `<img src="${CFG.photos[o.i]}" alt="${o.g[1]}" onerror="this.style.display='none'">` : art(o.g[0]);
       $('#lbc').textContent = o.g[1] + (CFG.photos[o.i] ? '' : ' (заглушка)');
       $('#lbi').firstChild.style.cssText = '';
-      $('#lbi').style.cssText = 'position:absolute;inset:0;background:' + o.g[2]
+      $('#lbi').style.cssText = 'position:absolute;inset:0;background:' + (CFG.photos[o.i] ? 'transparent' : o.g[2])
     }
 
     function openLb(j) {
@@ -1896,6 +1936,32 @@ function summary() {
           b.style.setProperty('--mx', (e.clientX - r.left) + 'px');
           b.style.setProperty('--my', (e.clientY - r.top) + 'px')
         }))
+      }
+    })();
+
+    /* ===== прелоадер: сайт открывается, когда загружены все фото ===== */
+    (() => {
+      try {
+        const urls = [...new Set(['images/logo.png', 'images/hero.jpg', ...Object.values(CFG.photos), ...Object.values(CFG.cfgPhotos)].filter(Boolean))];
+        const bar = $('#prei'), pct = $('#prep'), total = urls.length + 1;
+        let n = 0;
+        const tick = () => {
+          n++;
+          bar.style.transform = 'scaleX(' + (n / total) + ')';
+          pct.textContent = Math.round(n / total * 100) + '%'
+        };
+        const jobs = urls.map(u => new Promise(res => {
+          const im = new Image();
+          im.onload = im.onerror = () => {
+            tick();
+            res()
+          };
+          im.src = u
+        }));
+        jobs.push((document.fonts ? document.fonts.ready.catch(() => {}) : Promise.resolve()).then(tick));
+        Promise.all(jobs).then(() => requestAnimationFrame(() => window.__preDone()))
+      } catch (e) {
+        window.__preDone()
       }
     })();
   </script>
